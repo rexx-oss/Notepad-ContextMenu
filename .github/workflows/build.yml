@@ -1,4 +1,4 @@
-name: Build notepad-contextmenu Package
+name: Build Notepad-ContextMenu Package
 
 on:
   workflow_dispatch:
@@ -73,30 +73,30 @@ jobs:
           }
           $bmp256.Dispose()
 
-          # Certificate named "notepad-contextmenu"
+          # Certificate named "Notepad-ContextMenu"
           $cert = New-SelfSignedCertificate -Type Custom `
-            -Subject "CN=notepad-contextmenu" `
+            -Subject "CN=Notepad-ContextMenu" `
             -KeyUsage DigitalSignature `
-            -FriendlyName "notepad-contextmenu" `
+            -FriendlyName "Notepad-ContextMenu" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
 
           $certBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
-          [System.IO.File]::WriteAllBytes("staging/notepad-contextmenu.cer", $certBytes)
+          [System.IO.File]::WriteAllBytes("staging/Notepad-ContextMenu.cer", $certBytes)
 
           $kitBin = (Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64" | Select-Object -Last 1).FullName
           & "$kitBin\makeappx.exe" pack /d staging /p staging/NotepadMenu.msix /nv
-          & "$kitBin\signtool.exe" sign /fd SHA256 /a /s My /n "notepad-contextmenu" staging/NotepadMenu.msix
+          & "$kitBin\signtool.exe" sign /fd SHA256 /a /s My /n "Notepad-ContextMenu" staging/NotepadMenu.msix
 
       - name: Bundle Release Zip
         shell: powershell
         run: |
           Copy-Item install.ps1 staging/
           Copy-Item uninstall.ps1 staging/
-          Compress-Archive -Path staging/* -DestinationPath notepad-contextmenu.zip
+          Compress-Archive -Path staging/* -DestinationPath Notepad-ContextMenu.zip
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: notepad-contextmenu
-          path: notepad-contextmenu.zip
+          name: Notepad-ContextMenu
+          path: Notepad-ContextMenu.zip
