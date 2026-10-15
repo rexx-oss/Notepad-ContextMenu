@@ -6,8 +6,9 @@
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
   xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap uap10 desktop desktop4 desktop5 rescap">
+  IgnorableNamespaces="uap uap10 desktop desktop4 desktop5 com rescap">
 
   <Identity
     Name="VanillaClassicNotepad"
@@ -43,15 +44,14 @@
         Square44x44Logo="Assets\Square44x44Logo.png" />
 
       <Extensions>
-        <!-- In-process COM Server registration -->
-        <desktop:Extension Category="windows.comServer">
-          <desktop:ComServer>
-            <desktop:InProcessServer>
-              <desktop:Path>NotepadCommand.dll</desktop:Path>
-              <desktop:Class Id="CA735A42-3B76-4C41-8B3B-8C4828114002" Context="InProcServer" />
-            </desktop:InProcessServer>
-          </desktop:ComServer>
-        </desktop:Extension>
+        <!-- Correct COM namespace & surrogate server definition -->
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:SurrogateServer DisplayName="Vanilla Classic Notepad">
+              <com:Class Id="CA735A42-3B76-4C41-8B3B-8C4828114002" Path="NotepadCommand.dll" ThreadingModel="STA" />
+            </com:SurrogateServer>
+          </com:ComServer>
+        </com:Extension>
 
         <!-- Native Windows Default File Associations -->
         <desktop4:Extension Category="windows.fileExplorerContextMenus">
