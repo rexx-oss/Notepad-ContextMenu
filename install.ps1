@@ -8,14 +8,14 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 if (-not $ScriptDir) { $ScriptDir = $PSScriptRoot }
 
 Write-Host "=============================================" -ForegroundColor DarkCyan
-Write-Host "         notepad-contextmenu Installer       " -ForegroundColor White
+Write-Host "         Notepad-ContextMenu Installer       " -ForegroundColor White
 Write-Host "=============================================" -ForegroundColor DarkCyan
 
 $ans = Read-Host "Do you want to create a Start Menu shortcut for Notepad? (Y/N) [Default: Y]"
 $createShortcut = ($ans -notmatch '^[Nn]')
 
 Write-Host "`n1. Installing Certificate..." -ForegroundColor Cyan
-$certPath = Join-Path $ScriptDir "notepad-contextmenu.cer"
+$certPath = Join-Path $ScriptDir "Notepad-ContextMenu.cer"
 Import-Certificate -FilePath $certPath -CertStoreLocation "Cert:\LocalMachine\Root" | Out-Null
 
 Write-Host "2. Installing directly to WindowsApps..." -ForegroundColor Cyan
@@ -67,5 +67,5 @@ Remove-Item "$env:LOCALAPPDATA\IconCache.db" -Force -ErrorAction SilentlyContinu
 Remove-Item "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache*" -Force -ErrorAction SilentlyContinue
 Start-Process explorer.exe
 
-Write-Host "`nInstalled cleanly inside C:\Program Files\WindowsApps\notepad-contextmenu_...!" -ForegroundColor Green
+Write-Host "`nInstalled cleanly inside C:\Program Files\WindowsApps\Notepad-ContextMenu_...!" -ForegroundColor Green
 Write-Host "You can now safely delete the downloaded folder." -ForegroundColor Yellow
