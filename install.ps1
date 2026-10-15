@@ -34,7 +34,7 @@ Write-Host "5. Restoring 'New -> Text Document'..." -ForegroundColor Cyan
 reg add 'HKCR\.txt' /ve /t REG_SZ /d 'txtfilelegacy' /f
 reg add 'HKCR\.txt' /v 'Content Type' /t REG_SZ /d 'text/plain' /f
 reg add 'HKCR\.txt' /v 'PerceivedType' /t REG_SZ /d 'text' /f
-reg add 'HKCR\.txt\ShellNew' /v 'NullFile' /t REG_SZ /d '' /f
+reg add 'HKCR\.txt\ShellNew' /f /v 'NullFile' /t REG_SZ /d ''
 
 Write-Host "6. Setting Classic Document Icon..." -ForegroundColor Cyan
 reg add 'HKCR\txtfilelegacy' /ve /t REG_SZ /d 'Text Document' /f
