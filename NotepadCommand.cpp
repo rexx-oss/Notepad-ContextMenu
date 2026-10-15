@@ -17,6 +17,13 @@ class NotepadCommand : public IExplorerCommand, public IObjectWithSelection
     IShellItemArray* m_pSelection = nullptr;
 
 public:
+    ~NotepadCommand() {
+        if (m_pSelection) {
+            m_pSelection->Release();
+            m_pSelection = nullptr;
+        }
+    }
+
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
         static const QITAB qit[] = {
@@ -33,12 +40,22 @@ public:
         return cRef;
     }
 
-    // IObjectWithSelection
-    IFACEMETHODIMP SetSelection(IUnknown* punk) override {
-        if (m_pSelection) { m_pSelection->Release(); m_pSelection = nullptr; }
-        return punk ? punk->QueryInterface(IID_PPV_ARGS(&m_pSelection)) : S_OK;
+    // IObjectWithSelection (Corrected signature: IShellItemArray*)
+    IFACEMETHODIMP SetSelection(IShellItemArray* psia) override {
+        if (m_pSelection) {
+            m_pSelection->Release();
+            m_pSelection = nullptr;
+        }
+        if (psia) {
+            m_pSelection = psia;
+            m_pSelection->AddRef();
+        }
+        return S_OK;
     }
+
     IFACEMETHODIMP GetSelection(REFIID riid, void** ppv) override {
+        if (!ppv) return E_POINTER;
+        *ppv = nullptr;
         return m_pSelection ? m_pSelection->QueryInterface(riid, ppv) : E_NOINTERFACE;
     }
 
@@ -47,12 +64,32 @@ public:
         return SHStrDupW(L"Edit with Notepad", ppszName);
     }
     IFACEMETHODIMP GetIcon(IShellItemArray*, PWSTR* ppszIcon) override {
-        // Points to classic notepad icon
         return SHStrDupW(L"C:\\Windows\\System32\\notepad.exe,0", ppszIcon);
     }
-    IFACEMETHODIMP GetToolTip(IShellItemArray*, PWSTR* ppszInfo) override { *ppszInfo = nullptr; return E_NOTIMPL; }
-    IFACEMETHODIMP GetCanonicalName(GUID* pguid) override { *pguid = CLSID_NotepadCommand; return S_OK; }
-    IFACEMETHODIMP GetState(IShellItemArray*, BOOL, EXPCMDSTATE* pCmdState) override { *pCmdState = ECS_ENABLED; return S_OK; }
+    IFACEMETHODIMP GetToolTip(IShellItemArray*, PWSTR* ppszInfo) override {
+        if (ppszInfo) *ppszInfo = nullptr;
+        return E_NOTIMPL;
+    }
+    IFACEMETHODIMP GetCanonicalName(GUID* pguid) override {
+        if (!pguid) return E_POINTER;
+        *pguid = CLSID_NotepadCommand;
+        return S_OK;
+    }
+    IFACEMETHODIMP GetState(IShellItemArray*, BOOL, EXPCMDSTATE* pCmdState) override {
+        if (!pCmdState) return E_POINTER;
+        *pCmdState = ECS_ENABLED;
+        return S_OK;
+    }
+    IFACEMETHODIMP GetFlags(EXPCMDFLAGS* pFlags) override {
+        if (!pFlags) return E_POINTER;
+        *pFlags = ECF_DEFAULT;
+        return S_OK;
+    }
+    IFACEMETHODIMP EnumSubCommands(IEnumExplorerCommand** ppEnum) override {
+        if (ppEnum) *ppEnum = nullptr;
+        return E_NOTIMPL;
+    }
+
     IFACEMETHODIMP Invoke(IShellItemArray* psiItemArray, IBindCtx*) override {
         IShellItemArray* items = psiItemArray ? psiItemArray : m_pSelection;
         if (!items) return S_OK;
@@ -72,14 +109,13 @@ public:
         }
         return S_OK;
     }
-    IFACEMETHODIMP GetFlags(EXPCMDFLAGS* pFlags) override { *pFlags = ECF_DEFAULT; return S_OK; }
-    IFACEMETHODIMP EnumSubCommands(IEnumExplorerCommand** ppEnum) override { *ppEnum = nullptr; return E_NOTIMPL; }
 };
 
 class ClassFactory : public IClassFactory {
     LONG m_cRef = 1;
 public:
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
+        if (!ppv) return E_POINTER;
         if (riid == IID_IUnknown || riid == IID_IClassFactory) {
             *ppv = static_cast<IClassFactory*>(this);
             AddRef();
@@ -95,7 +131,10 @@ public:
         return cRef;
     }
     IFACEMETHODIMP CreateInstance(IUnknown* pUnkOuter, REFIID riid, void** ppv) override {
+        if (!ppv) return E_POINTER;
+        *ppv = nullptr;
         if (pUnkOuter) return CLASS_E_NOAGGREGATION;
+
         NotepadCommand* pCmd = new NotepadCommand();
         HRESULT hr = pCmd->QueryInterface(riid, ppv);
         pCmd->Release();
@@ -105,6 +144,9 @@ public:
 };
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv) {
+    if (!ppv) return E_POINTER;
+    *ppv = nullptr;
+
     if (rclsid == CLSID_NotepadCommand) {
         ClassFactory* pFactory = new ClassFactory();
         HRESULT hr = pFactory->QueryInterface(riid, ppv);
