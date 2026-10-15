@@ -11,14 +11,14 @@
   IgnorableNamespaces="uap uap10 desktop desktop4 desktop5 com rescap">
 
   <Identity
-    Name="notepad-contextmenu"
-    Publisher="CN=notepad-contextmenu"
+    Name="Notepad-ContextMenu"
+    Publisher="CN=Notepad-ContextMenu"
     Version="1.0.0.0"
     ProcessorArchitecture="x64" />
 
   <Properties>
     <DisplayName>Notepad</DisplayName>
-    <PublisherDisplayName>notepad-contextmenu</PublisherDisplayName>
+    <PublisherDisplayName>Notepad-ContextMenu</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
