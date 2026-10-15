@@ -1,25 +1,20 @@
-# Run as Administrator
+# Must run as Administrator
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Warning "Please run this script as Administrator!"
+    Write-Warning "Please run PowerShell as Administrator!"
     Exit
 }
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-Write-Host "1. Installing Certificate..." -ForegroundColor Cyan
+Write-Host "1. Installing Security Certificate..." -ForegroundColor Cyan
 $certPath = Join-Path $ScriptDir "VanillaClassicNotepad.cer"
-$rootStore = New-Object System.Security.Cryptography.X509Certificates.X509Store("Root", "LocalMachine")
-$rootStore.Open("ReadWrite")
-$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certPath)
-$rootStore.Add($cert)
-$rootStore.Close()
+Import-Certificate -FilePath $certPath -CertStoreLocation "Cert:\LocalMachine\Root" | Out-Null
 
-Write-Host "2. Registering Sparse Context Menu Package..." -ForegroundColor Cyan
-$manifestPath = Join-Path $ScriptDir "AppxManifest.xml"
-Add-AppxPackage -Register $manifestPath -ExternalLocation $ScriptDir
+Write-Host "2. Registering Signed MSIX Package..." -ForegroundColor Cyan
+$msixPath = Join-Path $ScriptDir "NotepadMenu.msix"
+Add-AppxPackage -Path $msixPath -ExternalLocation $ScriptDir
 
-Write-Host "3. Restoring 'New -> Text Document' Context Menu..." -ForegroundColor Cyan
-# Native Windows vanilla keys for .txt and ShellNew
+Write-Host "3. Restoring 'New -> Text Document' Menu..." -ForegroundColor Cyan
 New-Item -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Force | Out-Null
 Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Name "(Default)" -Value "txtfilelegacy"
 Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Name "Content Type" -Value "text/plain"
@@ -38,7 +33,9 @@ Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\DefaultIcon" -
 New-Item -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\shell\open\command" -Force | Out-Null
 Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\shell\open\command" -Name "(Default)" -Value '%SystemRoot%\system32\notepad.exe "%1"'
 
-Write-Host "4. Restarting Explorer..." -ForegroundColor Cyan
+Write-Host "4. Restarting Windows Explorer..." -ForegroundColor Cyan
 Stop-Process -Name explorer -Force
 
-Write-Host "`nDone! 'Edit with Notepad' and 'New -> Text Document' are now restored." -ForegroundColor Green
+Write-Host "`nInstallation successful!" -ForegroundColor Green
+Write-Host "• 'Edit with Notepad' is active on native file types in Windows 11."
+Write-Host "• 'New -> Text Document' is restored."
