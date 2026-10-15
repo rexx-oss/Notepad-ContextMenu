@@ -5,12 +5,12 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 
 Write-Host "1. Removing Package from WindowsApps..." -ForegroundColor Cyan
-Get-AppxPackage notepad-contextmenu | Remove-AppxPackage -ErrorAction SilentlyContinue
+Get-AppxPackage Notepad-ContextMenu | Remove-AppxPackage -ErrorAction SilentlyContinue
 
 Write-Host "2. Removing Security Certificate..." -ForegroundColor Cyan
 $rootStore = New-Object System.Security.Cryptography.X509Certificates.X509Store("Root", "LocalMachine")
 $rootStore.Open("ReadWrite")
-$certs = $rootStore.Certificates | Where-Object { $_.Subject -like "*CN=notepad-contextmenu*" }
+$certs = $rootStore.Certificates | Where-Object { $_.Subject -like "*CN=Notepad-ContextMenu*" }
 foreach ($cert in $certs) {
     $rootStore.Remove($cert)
 }
