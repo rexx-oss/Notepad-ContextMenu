@@ -20,7 +20,6 @@
     <DisplayName>Notepad</DisplayName>
     <PublisherDisplayName>VanillaClassicNotepad</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
-    <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
   </Properties>
 
   <Dependencies>
