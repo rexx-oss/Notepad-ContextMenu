@@ -23,13 +23,30 @@ jobs:
       - name: Create Clean Package Layout & Sign
         shell: pwsh
         run: |
-          # 1. Clean staging directory with only needed package files
+          # 1. Prepare clean staging area
           New-Item -ItemType Directory -Path staging/Assets -Force | Out-Null
           Copy-Item AppxManifest.xml staging/
           Copy-Item NotepadCommand.dll staging/
-          Copy-Item Assets/* staging/Assets/
 
-          # 2. Generate self-signed certificate
+          # 2. Extract REAL Notepad icon from system notepad.exe for crisp UI icons
+          Add-Type -AssemblyName System.Drawing
+          $icon = [System.Drawing.Icon]::ExtractAssociatedIcon("$env:SystemRoot\System32\notepad.exe")
+          $bmp = $icon.ToBitmap()
+
+          $sizes = @{ "staging/Assets/Square44x44Logo.png" = 44; "staging/Assets/Square150x150Logo.png" = 150; "staging/Assets/StoreLogo.png" = 50 }
+          foreach ($path in $sizes.Keys) {
+              $resized = New-Object System.Drawing.Bitmap $sizes[$path], $sizes[$path]
+              $g = [System.Drawing.Graphics]::FromImage($resized)
+              $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+              $g.DrawImage($bmp, 0, 0, $sizes[$path], $sizes[$path])
+              $g.Dispose()
+              $resized.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+              $resized.Dispose()
+          }
+          $bmp.Dispose()
+          $icon.Dispose()
+
+          # 3. Generate self-signed cert
           $cert = New-SelfSignedCertificate -Type Custom `
             -Subject "CN=VanillaClassicNotepad" `
             -KeyUsage DigitalSignature `
@@ -37,10 +54,11 @@ jobs:
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
 
-          # Export public key for local installer
-          Export-Certificate -Cert $cert -FilePath "staging/VanillaClassicNotepad.cer"
+          # Export cert with NO password
+          $certBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
+          [System.IO.File]::WriteAllBytes("staging/VanillaClassicNotepad.cer", $certBytes)
 
-          # 3. Package and sign from staging directory
+          # 4. Package and sign
           $kitBin = (Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64" | Select-Object -Last 1).FullName
           & "$kitBin\makeappx.exe" pack /d staging /p staging/NotepadMenu.msix /nv
           & "$kitBin\signtool.exe" sign /fd SHA256 /a /s My /n "VanillaClassicNotepad" staging/NotepadMenu.msix
@@ -50,7 +68,6 @@ jobs:
         run: |
           Copy-Item install.ps1 staging/
           Copy-Item uninstall.ps1 staging/
-
           Compress-Archive -Path staging/* -DestinationPath ClassicNotepadContext.zip
 
       - name: Upload Artifact
