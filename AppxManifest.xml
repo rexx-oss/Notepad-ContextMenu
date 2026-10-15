@@ -44,7 +44,7 @@
         Square44x44Logo="Assets\Square44x44Logo.png" />
 
       <Extensions>
-        <!-- Correct COM namespace & surrogate server definition -->
+        <!-- In-process COM Server registration -->
         <com:Extension Category="windows.comServer">
           <com:ComServer>
             <com:SurrogateServer DisplayName="Vanilla Classic Notepad">
@@ -53,25 +53,12 @@
           </com:ComServer>
         </com:Extension>
 
-        <!-- Native Windows Default File Associations -->
+        <!-- Modern Windows 11 Context Menu for ALL files (including .cmd, .bat, .reg, .xml, .txt) -->
         <desktop4:Extension Category="windows.fileExplorerContextMenus">
           <desktop4:FileExplorerContextMenus>
-            <!-- Command / Batch Scripts -->
-            <desktop5:ItemType Type=".cmd"><desktop5:Verb Id="EditCmd" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".bat"><desktop5:Verb Id="EditBat" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".ps1"><desktop5:Verb Id="EditPs1" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".vbs"><desktop5:Verb Id="EditVbs" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".js"><desktop5:Verb Id="EditJs" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".wsf"><desktop5:Verb Id="EditWsf" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <!-- Registry & Data -->
-            <desktop5:ItemType Type=".reg"><desktop5:Verb Id="EditReg" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".xml"><desktop5:Verb Id="EditXml" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <!-- Configuration & Text -->
-            <desktop5:ItemType Type=".ini"><desktop5:Verb Id="EditIni" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".inf"><desktop5:Verb Id="EditInf" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".txt"><desktop5:Verb Id="EditTxt" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".log"><desktop5:Verb Id="EditLog" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
-            <desktop5:ItemType Type=".cfg"><desktop5:Verb Id="EditCfg" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type="*">
+              <desktop5:Verb Id="EditWithNotepad" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" />
+            </desktop5:ItemType>
           </desktop4:FileExplorerContextMenus>
         </desktop4:Extension>
       </Extensions>
