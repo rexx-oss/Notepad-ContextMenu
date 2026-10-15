@@ -41,10 +41,10 @@
         Description="Open file in classic Notepad"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png" />
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        AppListEntry="none" />
 
       <Extensions>
-        <!-- In-process COM Server -->
         <com:Extension Category="windows.comServer">
           <com:ComServer>
             <com:SurrogateServer DisplayName="Vanilla Classic Notepad">
@@ -53,7 +53,6 @@
           </com:ComServer>
         </com:Extension>
 
-        <!-- Only related text, script, and config files -->
         <desktop4:Extension Category="windows.fileExplorerContextMenus">
           <desktop4:FileExplorerContextMenus>
             <!-- Text & Documents -->
@@ -62,7 +61,7 @@
             <desktop5:ItemType Type=".md"><desktop5:Verb Id="OpenMd" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
             <desktop5:ItemType Type=".csv"><desktop5:Verb Id="OpenCsv" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
 
-            <!-- Command & Scripts -->
+            <!-- Scripts -->
             <desktop5:ItemType Type=".cmd"><desktop5:Verb Id="OpenCmd" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
             <desktop5:ItemType Type=".bat"><desktop5:Verb Id="OpenBat" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
             <desktop5:ItemType Type=".ps1"><desktop5:Verb Id="OpenPs1" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
