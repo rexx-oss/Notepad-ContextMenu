@@ -1,4 +1,4 @@
-name: Build Classic Notepad Package
+name: Build notepad-contextmenu Package
 
 on:
   workflow_dispatch:
@@ -50,7 +50,6 @@ jobs:
               '}'
           ))
           
-          # Pass the exact DLL location to bypass Roslyn forwarder issues
           Add-Type -TypeDefinition $code -ReferencedAssemblies $drawingDll
           $bmp256 = [HighResIcon]::Get256("$env:SystemRoot\System32\notepad.exe")
 
@@ -74,30 +73,30 @@ jobs:
           }
           $bmp256.Dispose()
 
-          # Self-signed certificate
+          # Certificate named "notepad-contextmenu"
           $cert = New-SelfSignedCertificate -Type Custom `
-            -Subject "CN=VanillaClassicNotepad" `
+            -Subject "CN=notepad-contextmenu" `
             -KeyUsage DigitalSignature `
-            -FriendlyName "Vanilla Classic Notepad" `
+            -FriendlyName "notepad-contextmenu" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
 
           $certBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
-          [System.IO.File]::WriteAllBytes("staging/VanillaClassicNotepad.cer", $certBytes)
+          [System.IO.File]::WriteAllBytes("staging/notepad-contextmenu.cer", $certBytes)
 
           $kitBin = (Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64" | Select-Object -Last 1).FullName
           & "$kitBin\makeappx.exe" pack /d staging /p staging/NotepadMenu.msix /nv
-          & "$kitBin\signtool.exe" sign /fd SHA256 /a /s My /n "VanillaClassicNotepad" staging/NotepadMenu.msix
+          & "$kitBin\signtool.exe" sign /fd SHA256 /a /s My /n "notepad-contextmenu" staging/NotepadMenu.msix
 
       - name: Bundle Release Zip
         shell: powershell
         run: |
           Copy-Item install.ps1 staging/
           Copy-Item uninstall.ps1 staging/
-          Compress-Archive -Path staging/* -DestinationPath ClassicNotepadContext.zip
+          Compress-Archive -Path staging/* -DestinationPath notepad-contextmenu.zip
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ClassicNotepadContext
-          path: ClassicNotepadContext.zip
+          name: notepad-contextmenu
+          path: notepad-contextmenu.zip
