@@ -19,13 +19,16 @@ jobs:
           cl.exe /LD /O2 /EHsc NotepadCommand.cpp /link /DEF:NotepadCommand.def /OUT:NotepadCommand.dll shlwapi.lib shell32.lib ole32.lib
 
       - name: Create Clean Package Layout & Sign
-        shell: pwsh
+        shell: powershell
         run: |
           New-Item -ItemType Directory -Path staging/Assets -Force | Out-Null
           Copy-Item AppxManifest.xml staging/
           Copy-Item NotepadCommand.dll staging/
 
-          # Clean array-based C# definition (100% YAML safe, no here-strings)
+          # Load drawing assembly and resolve exact assembly location
+          Add-Type -AssemblyName System.Drawing
+          $drawingDll = [System.Drawing.Bitmap].Assembly.Location
+
           $code = [string]::Join("`n", @(
               'using System;',
               'using System.Drawing;',
@@ -46,7 +49,9 @@ jobs:
               '    }',
               '}'
           ))
-          Add-Type -TypeDefinition $code -ReferencedAssemblies System.Drawing
+          
+          # Pass the exact DLL location to bypass Roslyn forwarder issues
+          Add-Type -TypeDefinition $code -ReferencedAssemblies $drawingDll
           $bmp256 = [HighResIcon]::Get256("$env:SystemRoot\System32\notepad.exe")
 
           # Downscale with HighQualityBicubic for crisp retina icons
@@ -85,7 +90,7 @@ jobs:
           & "$kitBin\signtool.exe" sign /fd SHA256 /a /s My /n "VanillaClassicNotepad" staging/NotepadMenu.msix
 
       - name: Bundle Release Zip
-        shell: pwsh
+        shell: powershell
         run: |
           Copy-Item install.ps1 staging/
           Copy-Item uninstall.ps1 staging/
