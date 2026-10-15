@@ -6,15 +6,20 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-Write-Host "1. Installing Security Certificate..." -ForegroundColor Cyan
+Write-Host "1. Staging Classic Notepad Executable & Icons..." -ForegroundColor Cyan
+Copy-Item "$env:SystemRoot\System32\notepad.exe" -Destination (Join-Path $ScriptDir "notepad.exe") -Force
+
+Write-Host "2. Installing Security Certificate..." -ForegroundColor Cyan
 $certPath = Join-Path $ScriptDir "VanillaClassicNotepad.cer"
 Import-Certificate -FilePath $certPath -CertStoreLocation "Cert:\LocalMachine\Root" | Out-Null
 
-Write-Host "2. Registering Signed MSIX Package..." -ForegroundColor Cyan
+Write-Host "3. Registering Signed MSIX Package..." -ForegroundColor Cyan
 $msixPath = Join-Path $ScriptDir "NotepadMenu.msix"
 Add-AppxPackage -Path $msixPath -ExternalLocation $ScriptDir
 
-Write-Host "3. Restoring 'New -> Text Document' Menu..." -ForegroundColor Cyan
+Write-Host "4. Restoring 'New -> Text Document' Menu & Resetting Cache..." -ForegroundColor Cyan
+Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.txt\UserChoice" -Force -ErrorAction SilentlyContinue
+
 New-Item -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Force | Out-Null
 Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Name "(Default)" -Value "txtfilelegacy"
 Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Name "Content Type" -Value "text/plain"
@@ -33,9 +38,7 @@ Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\DefaultIcon" -
 New-Item -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\shell\open\command" -Force | Out-Null
 Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\shell\open\command" -Name "(Default)" -Value '%SystemRoot%\system32\notepad.exe "%1"'
 
-Write-Host "4. Restarting Windows Explorer..." -ForegroundColor Cyan
+Write-Host "5. Restarting Windows Explorer..." -ForegroundColor Cyan
 Stop-Process -Name explorer -Force
 
 Write-Host "`nInstallation successful!" -ForegroundColor Green
-Write-Host "• 'Edit with Notepad' is active on native file types in Windows 11."
-Write-Host "• 'New -> Text Document' is restored."
