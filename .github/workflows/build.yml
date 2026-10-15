@@ -23,30 +23,62 @@ jobs:
       - name: Create Clean Package Layout & Sign
         shell: pwsh
         run: |
-          # 1. Prepare clean staging area
           New-Item -ItemType Directory -Path staging/Assets -Force | Out-Null
           Copy-Item AppxManifest.xml staging/
           Copy-Item NotepadCommand.dll staging/
 
-          # 2. Extract REAL Notepad icon from system notepad.exe for crisp UI icons
-          Add-Type -AssemblyName System.Drawing
-          $icon = [System.Drawing.Icon]::ExtractAssociatedIcon("$env:SystemRoot\System32\notepad.exe")
-          $bmp = $icon.ToBitmap()
+          # Extract raw 256x256 high-resolution icon using Win32 PrivateExtractIcons
+          $iconSource = @"
+          using System;
+          using System.Drawing;
+          using System.Runtime.InteropServices;
 
-          $sizes = @{ "staging/Assets/Square44x44Logo.png" = 44; "staging/Assets/Square150x150Logo.png" = 150; "staging/Assets/StoreLogo.png" = 50 }
-          foreach ($path in $sizes.Keys) {
-              $resized = New-Object System.Drawing.Bitmap $sizes[$path], $sizes[$path]
-              $g = [System.Drawing.Graphics]::FromImage($resized)
-              $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-              $g.DrawImage($bmp, 0, 0, $sizes[$path], $sizes[$path])
-              $g.Dispose()
-              $resized.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
-              $resized.Dispose()
+          public class HighResIcon {
+              [DllImport("user32.dll", CharSet = CharSet.Auto)]
+              public static extern uint PrivateExtractIcons(
+                  string lpszFile, int nIconIndex, int cxIcon, int cyIcon,
+                  IntPtr[] phicon, int[] piconid, uint nIcons, uint flags);
+
+              [DllImport("user32.dll")]
+              public static extern bool DestroyIcon(IntPtr hIcon);
+
+              public static Bitmap Get256(string file) {
+                  IntPtr[] phicon = new IntPtr[1];
+                  int[] piconid = new int[1];
+                  uint count = PrivateExtractIcons(file, 0, 256, 256, phicon, piconid, 1, 0);
+                  if (count > 0 && phicon[0] != IntPtr.Zero) {
+                      Bitmap bmp = (Bitmap)Bitmap.FromHicon(phicon[0]).Clone();
+                      DestroyIcon(phicon[0]);
+                      return bmp;
+                  }
+                  return null;
+              }
           }
-          $bmp.Dispose()
-          $icon.Dispose()
+"@
+          Add-Type -TypeDefinition $iconSource -ReferencedAssemblies System.Drawing
+          $bmp256 = [HighResIcon]::Get256("$env:SystemRoot\System32\notepad.exe")
 
-          # 3. Generate self-signed cert
+          # Downscale with HighQualityBicubic for razor-sharp rendering
+          $sizes = @{
+              "staging/Assets/Square150x150Logo.png" = 150
+              "staging/Assets/Square44x44Logo.png"   = 44
+              "staging/Assets/StoreLogo.png"         = 50
+          }
+          foreach ($path in $sizes.Keys) {
+              $dim = $sizes[$path]
+              $target = New-Object System.Drawing.Bitmap $dim, $dim
+              $g = [System.Drawing.Graphics]::FromImage($target)
+              $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+              $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+              $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+              $g.DrawImage($bmp256, 0, 0, $dim, $dim)
+              $g.Dispose()
+              $target.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+              $target.Dispose()
+          }
+          $bmp256.Dispose()
+
+          # Generate self-signed cert & sign
           $cert = New-SelfSignedCertificate -Type Custom `
             -Subject "CN=VanillaClassicNotepad" `
             -KeyUsage DigitalSignature `
@@ -54,11 +86,9 @@ jobs:
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
 
-          # Export cert with NO password
           $certBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
           [System.IO.File]::WriteAllBytes("staging/VanillaClassicNotepad.cer", $certBytes)
 
-          # 4. Package and sign
           $kitBin = (Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64" | Select-Object -Last 1).FullName
           & "$kitBin\makeappx.exe" pack /d staging /p staging/NotepadMenu.msix /nv
           & "$kitBin\signtool.exe" sign /fd SHA256 /a /s My /n "VanillaClassicNotepad" staging/NotepadMenu.msix
