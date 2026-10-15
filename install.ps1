@@ -6,39 +6,50 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-Write-Host "1. Staging Classic Notepad Executable & Icons..." -ForegroundColor Cyan
-Copy-Item "$env:SystemRoot\System32\notepad.exe" -Destination (Join-Path $ScriptDir "notepad.exe") -Force
-
-Write-Host "2. Installing Security Certificate..." -ForegroundColor Cyan
+Write-Host "1. Installing Certificate..." -ForegroundColor Cyan
 $certPath = Join-Path $ScriptDir "VanillaClassicNotepad.cer"
 Import-Certificate -FilePath $certPath -CertStoreLocation "Cert:\LocalMachine\Root" | Out-Null
 
-Write-Host "3. Registering Signed MSIX Package..." -ForegroundColor Cyan
+Write-Host "2. Registering Sparse Context Menu Package..." -ForegroundColor Cyan
 $msixPath = Join-Path $ScriptDir "NotepadMenu.msix"
 Add-AppxPackage -Path $msixPath -ExternalLocation $ScriptDir
 
-Write-Host "4. Restoring 'New -> Text Document' Menu & Resetting Cache..." -ForegroundColor Cyan
-Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.txt\UserChoice" -Force -ErrorAction SilentlyContinue
+Write-Host "3. Killing Ghost UWP Redirects (Fixes Permission Error)..." -ForegroundColor Cyan
+# Disable IFEO hijack filter
+reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe" /v "UseFilter" /t REG_DWORD /d 0 /f
 
-New-Item -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Force | Out-Null
-Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Name "(Default)" -Value "txtfilelegacy"
-Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Name "Content Type" -Value "text/plain"
-Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\.txt" -Name "PerceivedType" -Value "text"
+# Delete DelegateExecute COM hooks (stops "Windows cannot access..." dialog)
+reg delete "HKCR\Applications\notepad.exe\shell\open\command" /v "DelegateExecute" /f 2>$null
+reg delete "HKCR\txtfilelegacy\shell\open\command" /v "DelegateExecute" /f 2>$null
+reg delete "HKCR\Applications\notepad.exe" /v "NoOpenWith" /f 2>$null
+reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\notepad.exe" /f 2>$null
 
-New-Item -Path "Registry::HKEY_CLASSES_ROOT\.txt\ShellNew" -Force | Out-Null
-Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\.txt\ShellNew" -Name "NullFile" -Value ""
+# Remove broken user association lock
+reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.txt\UserChoice" /f 2>$null
 
-New-Item -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy" -Force | Out-Null
-Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy" -Name "(Default)" -Value "Text Document"
-Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy" -Name "FriendlyTypeName" -Value "@%SystemRoot%\system32\notepad.exe,-469"
+# Remove dead zero-byte AppExecutionAlias if present
+Remove-Item "$env:LOCALAPPDATA\Microsoft\WindowsApps\notepad.exe" -Force -ErrorAction SilentlyContinue
 
-New-Item -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\DefaultIcon" -Force | Out-Null
-Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\DefaultIcon" -Name "(Default)" -Value "%SystemRoot%\system32\notepad.exe,0"
+Write-Host "4. Setting Classic Open Commands..." -ForegroundColor Cyan
+reg add 'HKCR\txtfilelegacy\shell\open\command' /ve /t REG_SZ /d 'C:\Windows\System32\notepad.exe "%1"' /f
+reg add 'HKCR\Applications\notepad.exe\shell\open\command' /ve /t REG_SZ /d 'C:\Windows\System32\notepad.exe "%1"' /f
 
-New-Item -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\shell\open\command" -Force | Out-Null
-Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\txtfilelegacy\shell\open\command" -Name "(Default)" -Value '%SystemRoot%\system32\notepad.exe "%1"'
+Write-Host "5. Restoring 'New -> Text Document'..." -ForegroundColor Cyan
+reg add 'HKCR\.txt' /ve /t REG_SZ /d 'txtfilelegacy' /f
+reg add 'HKCR\.txt' /v 'Content Type' /t REG_SZ /d 'text/plain' /f
+reg add 'HKCR\.txt' /v 'PerceivedType' /t REG_SZ /d 'text' /f
+reg add 'HKCR\.txt\ShellNew' /v 'NullFile' /t REG_SZ /d '' /f
 
-Write-Host "5. Restarting Windows Explorer..." -ForegroundColor Cyan
-Stop-Process -Name explorer -Force
+Write-Host "6. Setting Document Icon (White Paper with Written Lines)..." -ForegroundColor Cyan
+# imageres.dll,-102 is the genuine classic Windows text document icon
+reg add 'HKCR\txtfilelegacy' /ve /t REG_SZ /d 'Text Document' /f
+reg add 'HKCR\txtfilelegacy\DefaultIcon' /ve /t REG_SZ /d '%SystemRoot%\system32\imageres.dll,-102' /f
+reg add 'HKCR\Applications\notepad.exe\DefaultIcon' /ve /t REG_SZ /d '%SystemRoot%\system32\imageres.dll,-102' /f
 
-Write-Host "`nInstallation successful!" -ForegroundColor Green
+Write-Host "7. Flushing Icon Cache & Restarting Explorer..." -ForegroundColor Cyan
+taskkill /f /im explorer.exe 2>$null
+Remove-Item "$env:LOCALAPPDATA\IconCache.db" -Force -ErrorAction SilentlyContinue
+Remove-Item "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache*" -Force -ErrorAction SilentlyContinue
+Start-Process explorer.exe
+
+Write-Host "`nAll done! Zero extra tweaks required." -ForegroundColor Green
