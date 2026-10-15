@@ -1,8 +1,6 @@
 name: Build Classic Notepad Package
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -27,38 +25,31 @@ jobs:
           Copy-Item AppxManifest.xml staging/
           Copy-Item NotepadCommand.dll staging/
 
-          # Extract raw 256x256 high-resolution icon using Win32 PrivateExtractIcons
-          $iconSource = @"
-          using System;
-          using System.Drawing;
-          using System.Runtime.InteropServices;
-
-          public class HighResIcon {
-              [DllImport("user32.dll", CharSet = CharSet.Auto)]
-              public static extern uint PrivateExtractIcons(
-                  string lpszFile, int nIconIndex, int cxIcon, int cyIcon,
-                  IntPtr[] phicon, int[] piconid, uint nIcons, uint flags);
-
-              [DllImport("user32.dll")]
-              public static extern bool DestroyIcon(IntPtr hIcon);
-
-              public static Bitmap Get256(string file) {
-                  IntPtr[] phicon = new IntPtr[1];
-                  int[] piconid = new int[1];
-                  uint count = PrivateExtractIcons(file, 0, 256, 256, phicon, piconid, 1, 0);
-                  if (count > 0 && phicon[0] != IntPtr.Zero) {
-                      Bitmap bmp = (Bitmap)Bitmap.FromHicon(phicon[0]).Clone();
-                      DestroyIcon(phicon[0]);
-                      return bmp;
-                  }
-                  return null;
-              }
-          }
-"@
-          Add-Type -TypeDefinition $iconSource -ReferencedAssemblies System.Drawing
+          # Clean array-based C# definition (100% YAML safe, no here-strings)
+          $code = [string]::Join("`n", @(
+              'using System;',
+              'using System.Drawing;',
+              'using System.Runtime.InteropServices;',
+              'public class HighResIcon {',
+              '    [DllImport("user32.dll", CharSet = CharSet.Auto)]',
+              '    public static extern uint PrivateExtractIcons(string f, int idx, int cx, int cy, IntPtr[] ph, int[] id, uint n, uint fl);',
+              '    [DllImport("user32.dll")] public static extern bool DestroyIcon(IntPtr h);',
+              '    public static Bitmap Get256(string file) {',
+              '        IntPtr[] ph = new IntPtr[1]; int[] id = new int[1];',
+              '        uint c = PrivateExtractIcons(file, 0, 256, 256, ph, id, 1, 0);',
+              '        if (c > 0 && ph[0] != IntPtr.Zero) {',
+              '            Bitmap b = (Bitmap)Bitmap.FromHicon(ph[0]).Clone();',
+              '            DestroyIcon(ph[0]);',
+              '            return b;',
+              '        }',
+              '        return null;',
+              '    }',
+              '}'
+          ))
+          Add-Type -TypeDefinition $code -ReferencedAssemblies System.Drawing
           $bmp256 = [HighResIcon]::Get256("$env:SystemRoot\System32\notepad.exe")
 
-          # Downscale with HighQualityBicubic for razor-sharp rendering
+          # Downscale with HighQualityBicubic for crisp retina icons
           $sizes = @{
               "staging/Assets/Square150x150Logo.png" = 150
               "staging/Assets/Square44x44Logo.png"   = 44
@@ -78,7 +69,7 @@ jobs:
           }
           $bmp256.Dispose()
 
-          # Generate self-signed cert & sign
+          # Self-signed certificate
           $cert = New-SelfSignedCertificate -Type Custom `
             -Subject "CN=VanillaClassicNotepad" `
             -KeyUsage DigitalSignature `
