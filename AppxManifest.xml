@@ -17,7 +17,7 @@
     ProcessorArchitecture="x64" />
 
   <Properties>
-    <DisplayName>Edit with Notepad</DisplayName>
+    <DisplayName>Notepad</DisplayName>
     <PublisherDisplayName>VanillaClassicNotepad</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
@@ -37,14 +37,14 @@
       Executable="notepad.exe"
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="Edit with Notepad"
+        DisplayName="Notepad"
         Description="Open file in classic Notepad"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png" />
 
       <Extensions>
-        <!-- In-process COM Server registration -->
+        <!-- In-process COM Server -->
         <com:Extension Category="windows.comServer">
           <com:ComServer>
             <com:SurrogateServer DisplayName="Vanilla Classic Notepad">
@@ -53,12 +53,34 @@
           </com:ComServer>
         </com:Extension>
 
-        <!-- Modern Windows 11 Context Menu for ALL files (including .cmd, .bat, .reg, .xml, .txt) -->
+        <!-- Only related text, script, and config files -->
         <desktop4:Extension Category="windows.fileExplorerContextMenus">
           <desktop4:FileExplorerContextMenus>
-            <desktop5:ItemType Type="*">
-              <desktop5:Verb Id="EditWithNotepad" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" />
-            </desktop5:ItemType>
+            <!-- Text & Documents -->
+            <desktop5:ItemType Type=".txt"><desktop5:Verb Id="OpenTxt" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".log"><desktop5:Verb Id="OpenLog" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".md"><desktop5:Verb Id="OpenMd" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".csv"><desktop5:Verb Id="OpenCsv" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+
+            <!-- Command & Scripts -->
+            <desktop5:ItemType Type=".cmd"><desktop5:Verb Id="OpenCmd" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".bat"><desktop5:Verb Id="OpenBat" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".ps1"><desktop5:Verb Id="OpenPs1" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".vbs"><desktop5:Verb Id="OpenVbs" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".js"><desktop5:Verb Id="OpenJs" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".wsf"><desktop5:Verb Id="OpenWsf" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+
+            <!-- Config, Registry, & Markup -->
+            <desktop5:ItemType Type=".reg"><desktop5:Verb Id="OpenReg" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".xml"><desktop5:Verb Id="OpenXml" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".ini"><desktop5:Verb Id="OpenIni" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".inf"><desktop5:Verb Id="OpenInf" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".cfg"><desktop5:Verb Id="OpenCfg" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".config"><desktop5:Verb Id="OpenConfig" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".json"><desktop5:Verb Id="OpenJson" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".sql"><desktop5:Verb Id="OpenSql" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".yml"><desktop5:Verb Id="OpenYml" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".yaml"><desktop5:Verb Id="OpenYaml" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
           </desktop4:FileExplorerContextMenus>
         </desktop4:Extension>
       </Extensions>
