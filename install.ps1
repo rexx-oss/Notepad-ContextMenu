@@ -15,20 +15,16 @@ $msixPath = Join-Path $ScriptDir "NotepadMenu.msix"
 Add-AppxPackage -Path $msixPath -ExternalLocation $ScriptDir
 
 Write-Host "3. Killing Ghost UWP Redirects (Fixes Permission Error)..." -ForegroundColor Cyan
-# Disable IFEO hijack filter
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe" /v "UseFilter" /t REG_DWORD /d 0 /f
-
-# Delete DelegateExecute COM hooks (stops "Windows cannot access..." dialog)
 reg delete "HKCR\Applications\notepad.exe\shell\open\command" /v "DelegateExecute" /f 2>$null
 reg delete "HKCR\txtfilelegacy\shell\open\command" /v "DelegateExecute" /f 2>$null
 reg delete "HKCR\Applications\notepad.exe" /v "NoOpenWith" /f 2>$null
 reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\notepad.exe" /f 2>$null
-
-# Remove broken user association lock
 reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.txt\UserChoice" /f 2>$null
-
-# Remove dead zero-byte AppExecutionAlias if present
 Remove-Item "$env:LOCALAPPDATA\Microsoft\WindowsApps\notepad.exe" -Force -ErrorAction SilentlyContinue
+
+# Clean up universal wildcard so unrelated files (.mp4, .exe, .zip) don't get the menu
+reg delete "HKCR\*\shell\Edit with Notepad" /f 2>$null
 
 Write-Host "4. Setting Classic Open Commands..." -ForegroundColor Cyan
 reg add 'HKCR\txtfilelegacy\shell\open\command' /ve /t REG_SZ /d 'C:\Windows\System32\notepad.exe "%1"' /f
@@ -40,8 +36,7 @@ reg add 'HKCR\.txt' /v 'Content Type' /t REG_SZ /d 'text/plain' /f
 reg add 'HKCR\.txt' /v 'PerceivedType' /t REG_SZ /d 'text' /f
 reg add 'HKCR\.txt\ShellNew' /v 'NullFile' /t REG_SZ /d '' /f
 
-Write-Host "6. Setting Document Icon (White Paper with Written Lines)..." -ForegroundColor Cyan
-# imageres.dll,-102 is the genuine classic Windows text document icon
+Write-Host "6. Setting Classic Document Icon..." -ForegroundColor Cyan
 reg add 'HKCR\txtfilelegacy' /ve /t REG_SZ /d 'Text Document' /f
 reg add 'HKCR\txtfilelegacy\DefaultIcon' /ve /t REG_SZ /d '%SystemRoot%\system32\imageres.dll,-102' /f
 reg add 'HKCR\Applications\notepad.exe\DefaultIcon' /ve /t REG_SZ /d '%SystemRoot%\system32\imageres.dll,-102' /f
@@ -52,4 +47,4 @@ Remove-Item "$env:LOCALAPPDATA\IconCache.db" -Force -ErrorAction SilentlyContinu
 Remove-Item "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache*" -Force -ErrorAction SilentlyContinue
 Start-Process explorer.exe
 
-Write-Host "`nAll done! Zero extra tweaks required." -ForegroundColor Green
+Write-Host "`nAll done! Updated to 'Notepad' with native icons and restricted to related files." -ForegroundColor Green
