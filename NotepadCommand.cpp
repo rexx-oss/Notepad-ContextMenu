@@ -40,7 +40,7 @@ public:
         return cRef;
     }
 
-    // IObjectWithSelection (Corrected signature: IShellItemArray*)
+    // IObjectWithSelection
     IFACEMETHODIMP SetSelection(IShellItemArray* psia) override {
         if (m_pSelection) {
             m_pSelection->Release();
@@ -59,9 +59,9 @@ public:
         return m_pSelection ? m_pSelection->QueryInterface(riid, ppv) : E_NOINTERFACE;
     }
 
-    // IExplorerCommand
+    // IExplorerCommand (Shows as "Notepad")
     IFACEMETHODIMP GetTitle(IShellItemArray*, PWSTR* ppszName) override {
-        return SHStrDupW(L"Edit with Notepad", ppszName);
+        return SHStrDupW(L"Notepad", ppszName);
     }
     IFACEMETHODIMP GetIcon(IShellItemArray*, PWSTR* ppszIcon) override {
         return SHStrDupW(L"C:\\Windows\\System32\\notepad.exe,0", ppszIcon);
