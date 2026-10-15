@@ -11,14 +11,14 @@
   IgnorableNamespaces="uap uap10 desktop desktop4 desktop5 com rescap">
 
   <Identity
-    Name="VanillaClassicNotepad"
-    Publisher="CN=VanillaClassicNotepad"
+    Name="notepad-contextmenu"
+    Publisher="CN=notepad-contextmenu"
     Version="1.0.0.0"
     ProcessorArchitecture="x64" />
 
   <Properties>
     <DisplayName>Notepad</DisplayName>
-    <PublisherDisplayName>VanillaClassicNotepad</PublisherDisplayName>
+    <PublisherDisplayName>notepad-contextmenu</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -32,26 +32,28 @@
   </Capabilities>
 
   <Applications>
-    <Application Id="ClassicNotepadApp"
+    <Application Id="App"
       Executable="notepad.exe"
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="Notepad"
-        Description="Open file in classic Notepad"
+        Description="Notepad"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
         AppListEntry="none" />
 
       <Extensions>
+        <!-- In-process COM Server -->
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:SurrogateServer DisplayName="Vanilla Classic Notepad">
+            <com:SurrogateServer DisplayName="Notepad">
               <com:Class Id="CA735A42-3B76-4C41-8B3B-8C4828114002" Path="NotepadCommand.dll" ThreadingModel="STA" />
             </com:SurrogateServer>
           </com:ComServer>
         </com:Extension>
 
+        <!-- Context menu for text, scripts, and config files -->
         <desktop4:Extension Category="windows.fileExplorerContextMenus">
           <desktop4:FileExplorerContextMenus>
             <!-- Text & Documents -->
