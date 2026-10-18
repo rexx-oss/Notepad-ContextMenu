@@ -1,0 +1,4 @@
+LIBRARY NotepadCommand
+EXPORTS
+    DllGetClassObject PRIVATE
+    DllCanUnloadNow   PRIVATE
