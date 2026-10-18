@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+  xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap10 desktop desktop4 desktop5 com rescap">
+
+  <Identity
+    Name="Notepad-ContextMenu"
+    Publisher="CN=rexx"
+    Version="1.0.0.0"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Notepad-ContextMenu</DisplayName>
+    <PublisherDisplayName>rexx</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+  </Capabilities>
+
+  <Applications>
+    <Application Id="App"
+      Executable="notepad.exe"
+      EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Notepad-ContextMenu"
+        Description="Notepad-ContextMenu"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        AppListEntry="none" />
+
+      <Extensions>
+        <!-- In-process COM Server -->
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:SurrogateServer DisplayName="Notepad">
+              <com:Class Id="CA735A42-3B76-4C41-8B3B-8C4828114002" Path="NotepadCommand.dll" ThreadingModel="STA" />
+            </com:SurrogateServer>
+          </com:ComServer>
+        </com:Extension>
+
+        <!-- Context menu for text, scripts, and config files -->
+        <desktop4:Extension Category="windows.fileExplorerContextMenus">
+          <desktop4:FileExplorerContextMenus>
+            <!-- Text & Documents -->
+            <desktop5:ItemType Type=".txt"><desktop5:Verb Id="OpenTxt" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".log"><desktop5:Verb Id="OpenLog" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".md"><desktop5:Verb Id="OpenMd" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".csv"><desktop5:Verb Id="OpenCsv" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+
+            <!-- Scripts -->
+            <desktop5:ItemType Type=".cmd"><desktop5:Verb Id="OpenCmd" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".bat"><desktop5:Verb Id="OpenBat" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".ps1"><desktop5:Verb Id="OpenPs1" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".vbs"><desktop5:Verb Id="OpenVbs" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".js"><desktop5:Verb Id="OpenJs" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".wsf"><desktop5:Verb Id="OpenWsf" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+
+            <!-- Config, Registry, & Markup -->
+            <desktop5:ItemType Type=".reg"><desktop5:Verb Id="OpenReg" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".xml"><desktop5:Verb Id="OpenXml" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".ini"><desktop5:Verb Id="OpenIni" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".inf"><desktop5:Verb Id="OpenInf" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".cfg"><desktop5:Verb Id="OpenCfg" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".config"><desktop5:Verb Id="OpenConfig" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".json"><desktop5:Verb Id="OpenJson" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".sql"><desktop5:Verb Id="OpenSql" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".yml"><desktop5:Verb Id="OpenYml" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+            <desktop5:ItemType Type=".yaml"><desktop5:Verb Id="OpenYaml" Clsid="CA735A42-3B76-4C41-8B3B-8C4828114002" /></desktop5:ItemType>
+          </desktop4:FileExplorerContextMenus>
+        </desktop4:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+</Package>
