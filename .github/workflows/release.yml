@@ -26,10 +26,16 @@ jobs:
           mkdir -p release-files
           gh run download -n Notepad-ContextMenu -D release-files
 
-      - name: Create GitHub Release
+      - name: Create Clean Release Zip
+        run: |
+          cd release-files
+          zip -r ../Notepad-ContextMenu.zip ./*
+          cd ..
+
+      - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ inputs.tag }}" release-files/Notepad-ContextMenu.zip \
+          gh release create "${{ inputs.tag }}" Notepad-ContextMenu.zip \
             --title "${{ inputs.tag }}" \
             --notes "Release ${{ inputs.tag }}"
